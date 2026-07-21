@@ -7,6 +7,10 @@ function genLogId() {
     return Date.now().toString(36) + '-' + Math.random().toString(36).substr(2, 9)
 }
 
+function stripJid(jid) {
+    return (jid || '').split('@')[0].split(':')[0]
+}
+
 function logSend(instanceKey, method, body, result, status, logId) {
     try {
         appendLog({
@@ -14,7 +18,7 @@ function logSend(instanceKey, method, body, result, status, logId) {
             instanceKey,
             direction: 'outgoing',
             method,
-            to: body?.id || body?.message?.id || 'unknown',
+            to: stripJid(body?.id || body?.message?.id) || 'unknown',
             text: body?.message || body?.text || '[media]',
             status: status || 'sent',
             response: result?.key?.id || result?.id || null,

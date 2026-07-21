@@ -586,9 +586,9 @@
               <tbody>
                 <% logs.forEach(function(log) { %>
                   <tr>
-                    <td style="white-space:nowrap;font-size:12px;color:rgba(255,255,255,0.4)">
-                      <%= new Date(log.timestamp).toLocaleTimeString() %>
-                      <br><span style="font-size:10px;color:rgba(255,255,255,0.15)"><%= new Date(log.timestamp).toLocaleDateString() %></span>
+                    <td style="white-space:nowrap;font-size:12px;color:rgba(255,255,255,0.4)" class="log-time" data-ts="<%= new Date(log.timestamp).toISOString() %>">
+                      —
+                      <br><span style="font-size:10px;color:rgba(255,255,255,0.15)">—</span>
                     </td>
                     <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;font-family:monospace;font-size:12px" title="<%= log.to || log.id %>">
                       <%= log.to || log.id || '-' %>
@@ -957,6 +957,21 @@
         showToast('Error: ' + err.message, 'error');
       }
       btn.disabled = false; btn.textContent = 'Add Rule';
+    });
+
+    function fmtTime(iso) {
+      var d = new Date(iso);
+      return d.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true });
+    }
+    function fmtDate(iso) {
+      var d = new Date(iso);
+      return d.toLocaleDateString([], { year:'numeric', month:'numeric', day:'numeric' });
+    }
+    document.querySelectorAll('.log-time').forEach(function(td) {
+      var ts = td.getAttribute('data-ts');
+      if (ts) {
+        td.innerHTML = fmtTime(ts) + '<br><span style="font-size:10px;color:rgba(255,255,255,0.15)">' + fmtDate(ts) + '</span>';
+      }
     });
 
     loadRules();

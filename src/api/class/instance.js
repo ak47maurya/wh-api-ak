@@ -949,7 +949,7 @@ class WhatsAppInstance {
                             instanceKey: this.key,
                             direction: 'incoming',
                             type: messageType,
-                            to: (msg.key.remoteJid || '').split('@')[0],
+                            to: (msg.key.remoteJid || '').split('@')[0].split(':')[0],
                             text: typeof msgText === 'string' ? msgText : messageType,
                             status: 'received',
                             method: 'INCOMING',
