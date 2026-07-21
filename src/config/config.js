@@ -26,13 +26,6 @@ const CLIENT_PLATFORM = process.env.CLIENT_PLATFORM || 'Whatsapp MD'
 const CLIENT_BROWSER = process.env.CLIENT_BROWSER || 'Chrome'
 const CLIENT_VERSION = process.env.CLIENT_VERSION || '4.0.0'
 
-// Enable or disable mongodb
-const MONGODB_ENABLED = !!(
-    process.env.MONGODB_ENABLED && process.env.MONGODB_ENABLED === 'true'
-)
-// URL of the Mongo DB
-const MONGODB_URL =
-    process.env.MONGODB_URL || 'mongodb://127.0.0.1:27017/WhatsAppInstance'
 // Enable or disable webhook globally on project
 const WEBHOOK_ENABLED = !!(
     process.env.WEBHOOK_ENABLED && process.env.WEBHOOK_ENABLED === 'true'
@@ -61,14 +54,6 @@ module.exports = {
     },
     instance: {
         maxRetryQr: INSTANCE_MAX_RETRY_QR,
-    },
-    mongoose: {
-        enabled: MONGODB_ENABLED,
-        url: MONGODB_URL,
-        options: {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        },
     },
     browser: {
         platform: CLIENT_PLATFORM,
