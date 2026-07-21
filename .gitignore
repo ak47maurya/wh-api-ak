@@ -1,0 +1,16 @@
+# NODE
+node_modules
+package-lock.json
+yarn.lock
+
+# APPLICATION
+.env
+sessiondata
+db/*/
+!db/sessions.json
+logs/
+temp/
+
+# IDEs
+.vscode/settings.json
+.idea

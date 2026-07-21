@@ -1,0 +1,13 @@
+[
+  {
+    "key": "123",
+    "ignoreGroups": true,
+    "webhook": false,
+    "base64": true,
+    "incoming": true,
+    "webhookUrl": false,
+    "browser": "My API",
+    "webhookEvents": [],
+    "messagesRead": false
+  }
+]

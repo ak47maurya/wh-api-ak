@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ak Automations API Dashboard — <%= instanceKey %></title>
+  <link rel="icon" href="/img/favicon.png">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0a0a0f; color: #e0e0e0; min-height: 100vh;
+    }
+
+    .nav {
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 16px 32px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-brand { font-size: 20px; font-weight: 700; color: #25D366; display: flex; align-items: center; gap: 10px; }
+    .nav-brand small { font-size: 12px; font-weight: 400; color: rgba(255,255,255,0.3); }
+    .nav-right { display: flex; align-items: center; gap: 16px; }
+    .nav-key {
+      background: rgba(255,255,255,0.06); padding: 6px 14px;
+      border-radius: 8px; font-size: 13px; color: rgba(255,255,255,0.6);
+      font-family: monospace;
+    }
+    .nav-btn {
+      background: rgba(255,255,255,0.08); color: #e0e0e0;
+      border: 1px solid rgba(255,255,255,0.12); padding: 8px 18px;
+      border-radius: 10px; font-size: 13px; cursor: pointer; text-decoration: none;
+    }
+    .nav-btn:hover { background: rgba(255,255,255,0.12); }
+
+    .container { max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .full-width { grid-column: 1 / -1; }
+
+    .card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 16px; padding: 24px;
+    }
+    .card-title {
+      font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.5);
+      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px;
+    }
+
+    /* ANALYTICS ROW */
+    .analytics-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px; }
+    .stat-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 16px; padding: 20px; text-align: center;
+    }
+    .stat-num { font-size: 36px; font-weight: 800; line-height: 1.1; }
+    .stat-label { font-size: 12px; color: rgba(255,255,255,0.35); margin-top: 6px; text-transform: uppercase; letter-spacing: 0.03em; }
+    .stat-sub { font-size: 11px; color: rgba(255,255,255,0.2); margin-top: 2px; }
+    .stat-green .stat-num { color: #25D366; }
+    .stat-red .stat-num { color: #ff4444; }
+    .stat-yellow .stat-num { color: #ffc107; }
+    .stat-blue .stat-num { color: #3b82f6; }
+    .stat-purple .stat-num { color: #a855f7; }
+
+    /* STATUS */
+    .status-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .status-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: #555; flex-shrink: 0;
+    }
+    .status-dot.online { background: #25D366; box-shadow: 0 0 12px rgba(37,211,102,0.4); }
+    .status-dot.offline { background: #ff4444; box-shadow: 0 0 12px rgba(255,68,68,0.3); }
+    .status-label { font-size: 14px; color: rgba(255,255,255,0.7); }
+    .status-value { font-size: 14px; font-weight: 500; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .info-item { padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.04); }
+    .info-label { font-size: 12px; color: rgba(255,255,255,0.35); }
+    .info-value { font-size: 13px; color: rgba(255,255,255,0.8); font-family: monospace; word-break: break-all; }
+
+    .qr-wrap { text-align: center; padding: 16px; }
+    .qr-wrap img { width: 200px; height: 200px; border-radius: 12px; }
+    .qr-hint { font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 12px; }
+
+    .form-row { margin-bottom: 14px; }
+    .form-row label {
+      display: block; font-size: 12px; color: rgba(255,255,255,0.45);
+      font-weight: 500; margin-bottom: 4px;
+    }
+    .form-row input, .form-row textarea, .form-row select {
+      width: 100%; padding: 10px 12px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px; color: #fff; font-size: 14px;
+      outline: none; font-family: inherit;
+    }
+    .form-row textarea { resize: vertical; min-height: 60px; }
+    .form-row input:focus, .form-row textarea:focus { border-color: #25D366; }
+    .form-row-inline { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .hidden { display: none !important; }
+    .btn {
+      padding: 10px 20px; border-radius: 10px; border: none;
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn-primary { background: #25D366; color: #000; }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(37,211,102,0.25); }
+    .btn-secondary { background: rgba(255,255,255,0.08); color: #e0e0e0; }
+    .btn-danger { background: #ff4444; color: #fff; }
+    .btn-sm { padding: 8px 16px; font-size: 13px; }
+
+    .table-wrap { overflow-x: auto; max-height: 400px; overflow-y: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th {
+      text-align: left; padding: 10px 12px;
+      color: rgba(255,255,255,0.4); font-weight: 500;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+      position: sticky; top: 0; background: #0a0a0f;
+    }
+    td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    td .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 6px;
+      font-size: 11px; font-weight: 500;
+    }
+    .badge-sent { background: rgba(37,211,102,0.15); color: #25D366; }
+    .badge-failed { background: rgba(255,68,68,0.15); color: #ff4444; }
+    .badge-queued { background: rgba(255,193,7,0.15); color: #ffc107; }
+    .no-data { text-align: center; padding: 32px; color: rgba(255,255,255,0.25); font-size: 14px; }
+
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; padding: 14px 24px;
+      border-radius: 12px; font-size: 14px; z-index: 999;
+      transform: translateY(120px); opacity: 0;
+      transition: transform 0.3s, opacity 0.3s;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast-success { background: rgba(37,211,102,0.15); border: 1px solid rgba(37,211,102,0.3); color: #25D366; }
+    .toast-error { background: rgba(255,68,68,0.15); border: 1px solid rgba(255,68,68,0.3); color: #ff4444; }
+
+    .error-banner {
+      background: rgba(255,68,68,0.1); border: 1px solid rgba(255,68,68,0.2);
+      padding: 16px 20px; border-radius: 12px; margin-bottom: 20px;
+      font-size: 14px; color: #ff6666;
+    }
+
+    @media (max-width: 1000px) {
+      .analytics-row { grid-template-columns: repeat(3, 1fr); }
+      .grid { grid-template-columns: 1fr; }
+      .container { padding: 16px; }
+      .nav { padding: 12px 16px; flex-wrap: wrap; gap: 8px; }
+    }
+    @media (max-width: 600px) {
+      .analytics-row { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-brand">
+      Ak Automations API
+      <small>Analytics Dashboard</small>
+    </div>
+    <div class="nav-right">
+      <span class="nav-key"><%= instanceKey %></span>
+      <a href="/dashboard/logout" class="nav-btn">Logout</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <% if (instanceError) { %>
+      <div class="error-banner">⚠ <%= instanceError %></div>
+    <% } %>
+
+    <!-- ANALYTICS ROW -->
+    <%
+      var sTotal = stats ? stats.total : 0;
+      var sSent = stats ? stats.sent : 0;
+      var sFailed = stats ? stats.failed : 0;
+      var sQueued = stats ? stats.queued : 0;
+      var qPending = 0;
+      if (queueStatus) {
+        if (queueStatus.backend === 'redis') {
+          qPending = (queueStatus.queue.waiting || 0) + (queueStatus.queue.active || 0);
+        } else {
+          qPending = (queueStatus.queue.queued || 0) + (queueStatus.queue.running || 0);
+        }
+      }
+    %>
+    <div class="analytics-row">
+      <div class="stat-card stat-green">
+        <div class="stat-num"><%= sSent %></div>
+        <div class="stat-label">Sent</div>
+        <div class="stat-sub">Total messages delivered</div>
+      </div>
+      <div class="stat-card stat-red">
+        <div class="stat-num"><%= sFailed %></div>
+        <div class="stat-label">Failed</div>
+        <div class="stat-sub">Messages that errored</div>
+      </div>
+      <div class="stat-card stat-yellow">
+        <div class="stat-num"><%= sQueued %></div>
+        <div class="stat-label">Queued</div>
+        <div class="stat-sub">Awaiting processing</div>
+      </div>
+      <div class="stat-card stat-blue">
+        <div class="stat-num"><%= qPending %></div>
+        <div class="stat-label">In Queue</div>
+        <div class="stat-sub"><%= queueStatus ? queueStatus.backend : '-' %> backend</div>
+      </div>
+      <div class="stat-card stat-purple">
+        <div class="stat-num"><%= sTotal %></div>
+        <div class="stat-label">Total</div>
+        <div class="stat-sub">All time messages</div>
+      </div>
+    </div>
+
+    <div class="grid">
+
+      <!-- STATUS CARD -->
+      <div class="card">
+        <div class="card-title">Instance Status</div>
+        <% if (instanceInfo && instanceInfo.instance_data) { %>
+          <% const d = instanceInfo.instance_data; %>
+          <div class="status-row">
+            <span class="status-dot <%= d.phone_connected ? 'online' : 'offline' %>"></span>
+            <span class="status-label">Connection:</span>
+            <span class="status-value" style="color:<%= d.phone_connected ? '#25D366' : '#ff4444' %>">
+              <%= d.phone_connected ? 'Connected' : 'Disconnected' %>
+            </span>
+          </div>
+          <div class="info-grid">
+            <div class="info-item"><div class="info-label">Browser</div><div class="info-value"><%= d.browser || '-' %></div></div>
+            <div class="info-item"><div class="info-label">Webhook</div><div class="info-value"><%= d.webhook ? 'Enabled' : 'Disabled' %></div></div>
+            <div class="info-item"><div class="info-label">Base64</div><div class="info-value"><%= d.base64 ? 'Yes' : 'No' %></div></div>
+            <div class="info-item"><div class="info-label">Messages Read</div><div class="info-value"><%= d.messagesRead ? 'Yes' : 'No' %></div></div>
+            <div class="info-item"><div class="info-label">Ignore Groups</div><div class="info-value"><%= d.ignoreGroups ? 'Yes' : 'No' %></div></div>
+            <div class="info-item"><div class="info-label">Incoming</div><div class="info-value"><%= d.incoming ? 'Recorded' : 'Off' %></div></div>
+            <% if (d.user && d.user.id) { %>
+              <div class="info-item"><div class="info-label">Phone</div><div class="info-value"><%= d.user.id.split(':')[0] %></div></div>
+            <% } %>
+            <div class="info-item"><div class="info-label">Last Active</div><div class="info-value"><%= d.phone_connected ? 'Now' : 'Offline' %></div></div>
+          </div>
+          <% if (d.webhookUrl) { %>
+            <div class="info-item"><div class="info-label">Webhook URL</div><div class="info-value"><%= d.webhookUrl %></div></div>
+          <% } %>
+          <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">
+            <% if (d.phone_connected) { %>
+              <button class="btn btn-danger btn-sm" onclick="disconnectWhatsApp()">Disconnect</button>
+            <% } else { %>
+              <button class="btn btn-primary btn-sm" onclick="refreshQR()">Scan QR</button>
+              <button class="btn btn-secondary btn-sm" onclick="showPairModal()">Pair Code</button>
+            <% } %>
+          </div>
+        <% } else { %>
+          <div class="no-data">Instance info unavailable</div>
+        <% } %>
+      </div>
+
+      <!-- QR CODE / PROFILE -->
+      <div class="card">
+        <div class="card-title">Status</div>
+        <div id="qrContainer"><% if (qrCode) { %>
+          <div class="qr-wrap">
+            <img src="<%= qrCode %>" alt="QR Code">
+            <div class="qr-hint">WhatsApp mein linked devices > Scan karein</div>
+          </div>
+        <% } else if (instanceInfo && instanceInfo.instance_data && instanceInfo.instance_data.phone_connected) { %>
+          <div style="text-align:center;padding:16px;">
+            <% if (instanceInfo.profilePic) { %>
+              <img src="<%= instanceInfo.profilePic %>" alt="Profile" style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-bottom:10px;border:2px solid rgba(37,211,102,0.3);">
+            <% } else { %>
+              <div style="width:80px;height:80px;border-radius:50%;background:rgba(37,211,102,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:32px;">📱</div>
+            <% } %>
+            <div style="color:#25D366;font-size:16px;font-weight:500;">Connected</div>
+            <div style="color:rgba(255,255,255,0.3);font-size:13px;margin-top:4px;">
+              <% if (instanceInfo.instance_data.user && instanceInfo.instance_data.user.id) { %>
+                <%= instanceInfo.instance_data.user.id.split(':')[0] %>
+              <% } %>
+            </div>
+          </div>
+        <% } else { %>
+          <div class="qr-wrap">
+            <div style="font-size:48px;margin-bottom:12px;opacity:0.3;">📱</div>
+            <div class="qr-hint">QR not available. Init karke try karein.</div>
+          </div>
+        <% } %></div>
+      </div>
+
+      <!-- GROUPS -->
+      <% if (instanceInfo && instanceInfo.instance_data && instanceInfo.instance_data.phone_connected) { %>
+      <div class="card">
+        <div class="card-title">Groups (<%= Object.keys(groups).length %>)</div>
+        <div style="max-height:400px;overflow-y:auto;">
+          <% if (Object.keys(groups).length === 0) { %>
+            <div style="color:rgba(255,255,255,0.3);font-size:13px;padding:12px 0;">No groups found</div>
+          <% } else { %>
+            <% Object.entries(groups).slice(0, 50).forEach(([jid, g]) => { %>
+              <div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <div>
+                    <strong style="color:#fff;"><%= g.subject || g.name || jid %></strong>
+                    <div style="color:rgba(255,255,255,0.3);font-size:11px;margin-top:2px;"><%= jid %></div>
+                  </div>
+                  <span style="color:rgba(255,255,255,0.35);font-size:11px;background:rgba(255,255,255,0.05);padding:2px 10px;border-radius:100px;">
+                    <%= g.participants ? g.participants.length : 0 %> members
+                  </span>
+                </div>
+                <% if (g.participants && g.participants.length > 0) { %>
+                  <div style="margin-top:6px;padding-left:8px;border-left:2px solid rgba(37,211,102,0.2);">
+                    <% g.participants.slice(0, 10).forEach(p => { %>
+                      <div style="color:rgba(255,255,255,0.45);font-size:11px;padding:1px 0;">
+                        <%= p.id %> <% if (p.admin === 'admin' || p.admin === 'superadmin') { %><span style="color:#25D366;font-size:10px;">admin</span><% } %>
+                      </div>
+                    <% }) %>
+                    <% if (g.participants.length > 10) { %>
+                      <div style="color:rgba(255,255,255,0.2);font-size:11px;padding:2px 0;">... and <%= g.participants.length - 10 %> more</div>
+                    <% } %>
+                  </div>
+                <% } %>
+              </div>
+            <% }) %>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- CONTACTS -->
+      <div class="card">
+        <div class="card-title">Contacts (<%= contacts.length %>)</div>
+        <div style="max-height:400px;overflow-y:auto;">
+          <% if (contacts.length === 0) { %>
+            <div style="color:rgba(255,255,255,0.3);font-size:13px;padding:12px 0;">No contacts loaded yet</div>
+          <% } else { %>
+            <table style="width:100%;font-size:12px;border-collapse:collapse;">
+              <thead>
+                <tr style="color:rgba(255,255,255,0.35);border-bottom:1px solid rgba(255,255,255,0.06);">
+                  <th style="text-align:left;padding:8px 4px;">Name</th>
+                  <th style="text-align:left;padding:8px 4px;">JID</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% contacts.slice(0, 100).forEach(c => { %>
+                  <tr style="border-bottom:1px solid rgba(255,255,255,0.03);">
+                    <td style="padding:6px 4px;color:#fff;"><%= c.name || c.notify || c.verifiedName || '—' %></td>
+                    <td style="padding:6px 4px;color:rgba(255,255,255,0.45);font-family:monospace;font-size:11px;"><%= c.id %></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+            <% if (contacts.length > 100) { %>
+              <div style="color:rgba(255,255,255,0.2);font-size:11px;padding:8px 4px;">Showing 100 of <%= contacts.length %> contacts</div>
+            <% } %>
+          <% } %>
+        </div>
+      </div>
+      <% } %>
+
+      <!-- SEND MESSAGE -->
+      <div class="card full-width" style="margin-top:-8px">
+        <div class="card-title">Send Message</div>
+        <form id="sendForm">
+          <div class="form-row-inline">
+            <div class="form-row">
+              <label>Recipient JID</label>
+              <input type="text" id="sendId" placeholder="911234567890@s.whatsapp.net or group-jid@g.us" required>
+            </div>
+            <div class="form-row">
+              <label>Type</label>
+              <select id="sendType">
+                <option value="user">User</option>
+                <option value="group">Group</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <label>Message</label>
+            <textarea id="sendMessage" placeholder="Type your message here..." required></textarea>
+          </div>
+          <div class="form-row-inline">
+            <div class="form-row">
+              <label>Media Type</label>
+              <select id="sendMediaType" onchange="toggleMediaSource()">
+                <option value="text">Text</option>
+                <option value="image">Image</option>
+                <option value="video">Video</option>
+                <option value="audio">Audio</option>
+                <option value="document">Document</option>
+              </select>
+            </div>
+            <div class="form-row hidden" id="mediaSourceRow">
+              <label>Source</label>
+              <select id="sendMediaSource" onchange="toggleMediaSource()">
+                <option value="url">URL</option>
+                <option value="file">Upload File</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row hidden" id="mediaUrlRow">
+            <label>Media URL</label>
+            <input type="url" id="sendMediaUrl" placeholder="https://example.com/image.jpg">
+          </div>
+          <div class="form-row hidden" id="mediaFileRow">
+            <label>Upload File</label>
+            <input type="file" id="sendMediaFile">
+          </div>
+          <div class="form-row-inline">
+            <div class="form-row">
+              <label>Delay (seconds)</label>
+              <input type="number" id="sendDelay" value="0" min="0">
+            </div>
+            <div class="form-row">
+              <label>Group Options</label>
+              <select id="sendGroupOptions">
+                <option value="">None</option>
+                <option value="ghostMention">Ghost Mention (all)</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">Send Message</button>
+          <span id="sendResult" style="margin-left:12px;font-size:13px;"></span>
+        </form>
+      </div>
+
+      <!-- EDIT INSTANCE -->
+      <div class="card">
+        <div class="card-title">Edit Instance Settings</div>
+        <form id="editForm">
+          <div class="form-row">
+            <label>Webhook URL</label>
+            <input type="url" id="editWebhookUrl" placeholder="https://your-webhook.com/hook">
+          </div>
+          <div class="form-row-inline">
+            <div class="form-row">
+              <label>Browser Name</label>
+              <input type="text" id="editBrowser" placeholder="My API">
+            </div>
+            <div class="form-row">
+              <label>Webhook</label>
+              <select id="editWebhook">
+                <option value="true">Enabled</option>
+                <option value="false">Disabled</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row-inline">
+            <div class="form-row">
+              <label>Base64 Media</label>
+              <select id="editBase64">
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Auto Read Messages</label>
+              <select id="editMessagesRead">
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <label>Ignore Groups</label>
+            <select id="editIgnoreGroups">
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>Record Incoming Messages</label>
+            <select id="editIncoming">
+              <option value="true">Enabled</option>
+              <option value="false">Disabled</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-secondary">Update Instance</button>
+          <span id="editResult" style="margin-left:12px;font-size:13px;"></span>
+        </form>
+      </div>
+
+      <!-- QUEUE STATUS -->
+      <div class="card">
+        <div class="card-title">Queue Status</div>
+        <% if (queueStatus) { %>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;">
+            <% if (queueStatus.backend === 'redis') { %>
+              <div style="background:rgba(255,255,255,0.04);padding:16px;border-radius:12px;text-align:center;flex:1;min-width:70px;">
+                <div style="font-size:28px;font-weight:700;color:#25D366;"><%= queueStatus.queue.waiting || 0 %></div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px;">WAITING</div>
+              </div>
+              <div style="background:rgba(255,255,255,0.04);padding:16px;border-radius:12px;text-align:center;flex:1;min-width:70px;">
+                <div style="font-size:28px;font-weight:700;color:#3b82f6;"><%= queueStatus.queue.active || 0 %></div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px;">ACTIVE</div>
+              </div>
+              <div style="background:rgba(255,255,255,0.04);padding:16px;border-radius:12px;text-align:center;flex:1;min-width:70px;">
+                <div style="font-size:28px;font-weight:700;color:#ffc107;"><%= queueStatus.queue.delayed || 0 %></div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px;">DELAYED</div>
+              </div>
+              <div style="background:rgba(255,255,255,0.04);padding:16px;border-radius:12px;text-align:center;flex:1;min-width:70px;">
+                <div style="font-size:28px;font-weight:700;color:#ff4444;"><%= queueStatus.queue.failed || 0 %></div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px;">FAILED</div>
+              </div>
+            <% } else { %>
+              <div style="background:rgba(255,255,255,0.04);padding:16px;border-radius:12px;text-align:center;flex:1;min-width:70px;">
+                <div style="font-size:28px;font-weight:700;color:#25D366;"><%= queueStatus.queue.queued || 0 %></div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px;">QUEUED</div>
+              </div>
+              <div style="background:rgba(255,255,255,0.04);padding:16px;border-radius:12px;text-align:center;flex:1;min-width:70px;">
+                <div style="font-size:28px;font-weight:700;color:#3b82f6;"><%= queueStatus.queue.running || 0 %></div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px;">RUNNING</div>
+              </div>
+              <div style="background:rgba(255,255,255,0.04);padding:16px;border-radius:12px;text-align:center;flex:1;min-width:70px;">
+                <div style="font-size:28px;font-weight:700;color:rgba(255,255,255,0.3);"><%= queueStatus.queue.concurrency || 1 %></div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px;">CONCURRENCY</div>
+              </div>
+            <% } %>
+          </div>
+          <div style="margin-top:10px;font-size:11px;color:rgba(255,255,255,0.25);display:flex;justify-content:space-between;">
+            <span>Backend: <strong><%= queueStatus.backend %></strong></span>
+            <span>Delay: <%= queueStatus.queue.delayMs || 0 %>ms</span>
+            <span>Max: <%= queueStatus.queue.max || '-' %></span>
+          </div>
+        <% } else { %>
+          <div class="no-data">Queue status unavailable</div>
+        <% } %>
+      </div>
+
+      <!-- MESSAGE HISTORY -->
+      <div class="card full-width">
+        <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>Message History</span>
+          <span style="font-size:12px;font-weight:400;color:rgba(255,255,255,0.3);">Last <%= logs.length %> records <button onclick="location.reload()" style="background:none;border:none;color:#25D366;cursor:pointer;font-size:13px;margin-left:8px;">↻ Refresh</button></span>
+        </div>
+        <% if (logs.length > 0) { %>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>To</th>
+                  <th>Message</th>
+                  <th>Status</th>
+                  <th>Method</th>
+                  <th style="width:40px"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <% logs.forEach(function(log) { %>
+                  <tr>
+                    <td style="white-space:nowrap;font-size:12px;color:rgba(255,255,255,0.4)">
+                      <%= new Date(log.timestamp).toLocaleTimeString() %>
+                      <br><span style="font-size:10px;color:rgba(255,255,255,0.15)"><%= new Date(log.timestamp).toLocaleDateString() %></span>
+                    </td>
+                    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;font-family:monospace;font-size:12px" title="<%= log.to || log.id %>">
+                      <%= log.to || log.id || '-' %>
+                    </td>
+                    <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis" title="<%= log.text || log.message %>">
+                      <%= log.text || log.message || '-[media]-' %>
+                    </td>
+                    <td>
+                      <span class="badge badge-<%= log.status === 'sent' ? 'sent' : (log.status === 'queued' ? 'queued' : 'failed') %>"
+                        <% if (log.response && log.status !== 'sent') { %>title="<%= log.response %>"<% } %>>
+                        <%= log.status %>
+                      </span>
+                      <% if (log.response && log.status !== 'sent' && typeof log.response === 'string' && log.response.length > 20) { %>
+                        <div style="font-size:10px;color:#ff6666;margin-top:2px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="<%= log.response %>"><%= log.response %></div>
+                      <% } %>
+                    </td>
+                    <td style="font-size:12px;color:rgba(255,255,255,0.4);font-family:monospace">
+                      <%= log.method || '-' %>
+                    </td>
+                    <td style="text-align:center">
+                      <button onclick="deleteLogRow('<%= log._logId %>')" style="background:none;border:none;color:#ff4444;cursor:pointer;font-size:16px;padding:4px;" title="Delete this log">✕</button>
+                    </td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+        <% } else { %>
+          <div class="no-data">No messages sent yet. Queue koi message bhej ke dekhein.</div>
+        <% } %>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <!-- Pair Code Modal -->
+  <div id="pairModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:#1a1a2e;border-radius:16px;padding:32px;width:380px;max-width:90vw;border:1px solid rgba(255,255,255,0.1);">
+      <div style="font-size:16px;font-weight:600;margin-bottom:16px;color:#fff;">Pairing Code</div>
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:12px;color:rgba(255,255,255,0.45);margin-bottom:4px;">Phone Number (with country code)</label>
+        <input type="text" id="pairNumber" placeholder="e.g. 911234567890" style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;font-size:14px;outline:none;">
+      </div>
+      <div id="pairResult" style="font-size:13px;margin-bottom:12px;"></div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-primary" onclick="getPairCode()" style="flex:1;">Get Code</button>
+        <button class="btn btn-secondary" onclick="closePairModal()" style="flex:1;">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+    const TOKEN = '<%= typeof token !== "undefined" ? token : "" %>';
+    const ADMIN_TOKEN = '<%= typeof adminToken !== "undefined" ? adminToken : "" %>';
+    const KEY = '<%= instanceKey %>';
+
+    function showToast(msg, type) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast toast-' + type + ' show';
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    async function refreshQR() {
+      showToast('Generating QR...', 'success');
+      try {
+        const res = await fetch(API_BASE + '/instance/qrbase64?key=' + KEY, {
+          headers: { 'Authorization': 'Bearer ' + TOKEN }
+        });
+        const data = await res.json();
+        if (data.error === true && data.message === 'Phone already connected') {
+          showToast('Already connected!', 'success');
+          location.reload();
+        } else if (data.qrcode) {
+          document.getElementById('qrContainer').innerHTML = '<div class="qr-wrap"><img src="' + data.qrcode + '" alt="QR Code"><div class="qr-hint">WhatsApp mein linked devices > Scan karein</div></div>';
+          showToast('QR generated!', 'success');
+        } else {
+          showToast('QR generation failed', 'error');
+        }
+      } catch(e) {
+        showToast('QR generation failed', 'error');
+      }
+    }
+
+    async function disconnectWhatsApp() {
+      if (!confirm('WhatsApp se logout karna hai?')) return;
+      try {
+        const res = await fetch(API_BASE + '/instance/logout?key=' + KEY, {
+          headers: { 'Authorization': 'Bearer ' + TOKEN }
+        });
+        const data = await res.json();
+        if (data.error === false) {
+          showToast('Disconnected successfully!', 'success');
+          setTimeout(() => location.reload(), 1500);
+        } else {
+          showToast('Failed: ' + (data.message || 'Error'), 'error');
+        }
+      } catch (err) {
+        showToast('Error: ' + err.message, 'error');
+      }
+    }
+
+    function showPairModal() {
+      document.getElementById('pairModal').style.display = 'flex';
+      document.getElementById('pairResult').innerHTML = '';
+      document.getElementById('pairNumber').value = '';
+    }
+
+    function closePairModal() {
+      document.getElementById('pairModal').style.display = 'none';
+    }
+
+    async function getPairCode() {
+      const number = document.getElementById('pairNumber').value.trim();
+      if (!number) {
+        document.getElementById('pairResult').innerHTML = '<span style="color:#ff4444;">Phone number daalein</span>';
+        return;
+      }
+      document.getElementById('pairResult').innerHTML = '<span style="color:rgba(255,255,255,0.5);">Getting code...</span>';
+      try {
+        const res = await fetch(API_BASE + '/instance/getcode?key=' + KEY, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN },
+          body: JSON.stringify({ number: number })
+        });
+        const data = await res.json();
+        if (data.error === false && data.code) {
+          document.getElementById('pairResult').innerHTML =
+            '<div style="background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.2);border-radius:10px;padding:16px;text-align:center;">' +
+            '<div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px;">WhatsApp mein yeh code daalein:</div>' +
+            '<div style="font-size:28px;font-weight:800;color:#25D366;letter-spacing:4px;font-family:monospace;">' + data.code + '</div></div>';
+        } else {
+          document.getElementById('pairResult').innerHTML = '<span style="color:#ff4444;">' + (data.message || 'Failed to get code') + '</span>';
+        }
+      } catch (err) {
+        document.getElementById('pairResult').innerHTML = '<span style="color:#ff4444;">Error: ' + err.message + '</span>';
+      }
+    }
+
+    async function deleteLogRow(logId) {
+      if (!logId) return;
+      if (!confirm('Is log entry ko delete karein?')) return;
+      try {
+        const res = await fetch('/dashboard/delete-log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ logId })
+        });
+        const data = await res.json();
+        if (data.error === false) {
+          showToast('Deleted!', 'success');
+          setTimeout(() => location.reload(), 800);
+        } else {
+          showToast('Failed: ' + (data.message || 'Error'), 'error');
+        }
+      } catch (err) {
+        showToast('Error: ' + err.message, 'error');
+      }
+    }
+
+    function toggleMediaSource() {
+      const val = document.getElementById('sendMediaType').value;
+      const isText = val === 'text';
+      const sourceRow = document.getElementById('mediaSourceRow');
+      const urlRow = document.getElementById('mediaUrlRow');
+      const fileRow = document.getElementById('mediaFileRow');
+      sourceRow.classList.toggle('hidden', isText);
+      if (!isText) {
+        const src = document.getElementById('sendMediaSource').value;
+        urlRow.classList.toggle('hidden', src !== 'url');
+        fileRow.classList.toggle('hidden', src !== 'file');
+      } else {
+        urlRow.classList.add('hidden');
+        fileRow.classList.add('hidden');
+      }
+      document.getElementById('sendMessage').required = isText;
+    }
+
+    toggleMediaSource();
+
+    document.getElementById('sendForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const btn = this.querySelector('button[type=submit]');
+      btn.disabled = true; btn.textContent = 'Sending...';
+
+      const mediaType = document.getElementById('sendMediaType').value;
+      const id = document.getElementById('sendId').value;
+      const typeId = document.getElementById('sendType').value;
+      const message = document.getElementById('sendMessage').value;
+      const delay = parseInt(document.getElementById('sendDelay').value);
+      const go = document.getElementById('sendGroupOptions').value;
+
+      let apiPath, body, isFile;
+
+      if (mediaType === 'text') {
+        apiPath = '/message/text';
+        body = { id, typeId, message };
+        if (delay > 0) body.options = { delay };
+        if (go) body.groupOptions = { markUser: go };
+        isFile = false;
+      } else {
+        const src = document.getElementById('sendMediaSource').value;
+        if (src === 'file') {
+          isFile = true;
+          const map = { image: 'image', video: 'video', audio: 'audio', document: 'doc' };
+          apiPath = '/message/' + map[mediaType];
+          const fd = new FormData();
+          fd.append('id', id);
+          fd.append('typeId', typeId);
+          fd.append('file', document.getElementById('sendMediaFile').files[0]);
+          if (message) fd.append('caption', message);
+          if (delay > 0) fd.append('delay', delay);
+          if (go) fd.append('groupOptions', JSON.stringify({ markUser: go }));
+          body = fd;
+        } else {
+          isFile = false;
+          apiPath = '/message/sendurlfile';
+          body = { id, typeId, url: document.getElementById('sendMediaUrl').value, type: mediaType };
+          if (message) body.options = { caption: message };
+          if (delay > 0) body.options = { ...body.options, delay };
+          if (go) body.groupOptions = { markUser: go };
+        }
+      }
+
+      try {
+        const opts = {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + TOKEN },
+        };
+        if (isFile) {
+          opts.body = body;
+        } else {
+          opts.headers['Content-Type'] = 'application/json';
+          opts.body = JSON.stringify(body);
+        }
+        const res = await fetch(API_BASE + apiPath + '?key=' + KEY, opts);
+        const data = await res.json();
+        if (data.error === false || data.data) {
+          showToast('Message sent!', 'success');
+          document.getElementById('sendResult').innerHTML = '<span style="color:#25D366">✓ ID: ' + (data.data?.key?.id || data.job?.id || 'ok') + '</span>';
+          setTimeout(() => location.reload(), 1500);
+        } else {
+          showToast('Failed: ' + (data.message || 'Unknown error'), 'error');
+          document.getElementById('sendResult').innerHTML = '<span style="color:#ff4444">✗ ' + (data.message || 'Failed') + '</span>';
+        }
+      } catch (err) {
+        showToast('Error: ' + err.message, 'error');
+      }
+      btn.disabled = false; btn.textContent = 'Send Message';
+    });
+
+    document.getElementById('editForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const btn = this.querySelector('button[type=submit]');
+      btn.disabled = true; btn.textContent = 'Updating...';
+
+      const body = {
+        key: KEY,
+        webhook: document.getElementById('editWebhook').value === 'true',
+        webhookUrl: document.getElementById('editWebhookUrl').value,
+        browser: document.getElementById('editBrowser').value,
+        base64: document.getElementById('editBase64').value === 'true',
+        messagesRead: document.getElementById('editMessagesRead').value === 'true',
+        ignoreGroups: document.getElementById('editIgnoreGroups').value === 'true',
+        incoming: document.getElementById('editIncoming').value === 'true'
+      };
+
+      try {
+        const res = await fetch(API_BASE + '/instance/editar?key=' + KEY, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (data.error === false) {
+          showToast('Instance updated!', 'success');
+          document.getElementById('editResult').innerHTML = '<span style="color:#25D366">✓ Updated</span>';
+          setTimeout(() => location.reload(), 1500);
+        } else {
+          showToast('Failed: ' + (data.message || 'Error'), 'error');
+        }
+      } catch (err) {
+        showToast('Error: ' + err.message, 'error');
+      }
+      btn.disabled = false; btn.textContent = 'Update Instance';
+    });
+  </script>
+</body>
+</html>
