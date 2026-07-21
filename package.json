@@ -57,6 +57,7 @@
         "node-mime-types": "^1.1.0",
         "node-schedule": "^2.1.1",
         "pino": "^8.7.0",
+        "mongoose": "^8.24.0",
         "qrcode": "^1.5.1",
         "sharp": "^0.32.2",
         "uuid": "^9.0.0"
