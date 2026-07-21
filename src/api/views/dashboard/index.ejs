@@ -236,6 +236,7 @@
             <div class="info-item"><div class="info-label">Messages Read</div><div class="info-value"><%= d.messagesRead ? 'Yes' : 'No' %></div></div>
             <div class="info-item"><div class="info-label">Ignore Groups</div><div class="info-value"><%= d.ignoreGroups ? 'Yes' : 'No' %></div></div>
             <div class="info-item"><div class="info-label">Incoming</div><div class="info-value"><%= d.incoming ? 'Recorded' : 'Off' %></div></div>
+            <div class="info-item"><div class="info-label">Chatbot</div><div class="info-value"><%= d.chatbot ? 'Active' : 'Off' %></div></div>
             <% if (d.user && d.user.id) { %>
               <div class="info-item"><div class="info-label">Phone</div><div class="info-value"><%= d.user.id.split(':')[0] %></div></div>
             <% } %>
@@ -472,6 +473,13 @@
               <option value="false">Disabled</option>
             </select>
           </div>
+          <div class="form-row">
+            <label>Auto Reply (Chatbot)</label>
+            <select id="editChatbot">
+              <option value="true">Enabled</option>
+              <option value="false">Disabled</option>
+            </select>
+          </div>
           <button type="submit" class="btn btn-secondary">Update Instance</button>
           <span id="editResult" style="margin-left:12px;font-size:13px;"></span>
         </form>
@@ -522,6 +530,38 @@
         <% } else { %>
           <div class="no-data">Queue status unavailable</div>
         <% } %>
+      </div>
+
+      <!-- CHATBOT RULES -->
+      <div class="card full-width">
+        <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>Chatbot Rules</span>
+          <span style="font-size:12px;font-weight:400;color:rgba(255,255,255,0.3);">
+            Auto-reply tab instance ki <b>Auto Reply</b> setting ON honi chahiye
+          </span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+          <div>
+            <form id="ruleForm">
+              <div class="form-row">
+                <label>Keywords (comma separated)</label>
+                <input type="text" id="ruleKeywords" placeholder="hi, hello, hey">
+              </div>
+              <div class="form-row">
+                <label>Reply Message</label>
+                <textarea id="ruleReply" placeholder="Hello! How can I help you?"></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary">Add Rule</button>
+              <span id="ruleResult" style="margin-left:12px;font-size:13px;"></span>
+            </form>
+          </div>
+          <div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:8px;">Existing Rules</div>
+            <div id="rulesList" style="max-height:200px;overflow-y:auto;">
+              <div class="no-data">Loading rules...</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- MESSAGE HISTORY -->
@@ -816,7 +856,8 @@
         base64: document.getElementById('editBase64').value === 'true',
         messagesRead: document.getElementById('editMessagesRead').value === 'true',
         ignoreGroups: document.getElementById('editIgnoreGroups').value === 'true',
-        incoming: document.getElementById('editIncoming').value === 'true'
+        incoming: document.getElementById('editIncoming').value === 'true',
+        chatbot: document.getElementById('editChatbot').value === 'true'
       };
 
       try {
@@ -838,6 +879,87 @@
       }
       btn.disabled = false; btn.textContent = 'Update Instance';
     });
+
+    // Chatbot Rules
+    async function loadRules() {
+      try {
+        const res = await fetch(API_BASE + '/rule/list?instanceKey=' + KEY, {
+          headers: { 'Authorization': 'Bearer ' + TOKEN }
+        });
+        const data = await res.json();
+        const list = document.getElementById('rulesList');
+        if (!data.error && data.rules.length > 0) {
+          list.innerHTML = data.rules.map(r =>
+            '<div style="padding:10px;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;justify-content:space-between;align-items:center;">' +
+              '<div>' +
+                '<div style="font-size:13px;color:rgba(255,255,255,0.7);">' + r.keywords.join(', ') + '</div>' +
+                '<div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:2px;">→ ' + r.reply + '</div>' +
+              '</div>' +
+              '<button onclick="deleteRule(\'' + r._id + '\')" style="background:none;border:none;color:#ff4444;cursor:pointer;font-size:16px;padding:4px;" title="Delete rule">✕</button>' +
+            '</div>'
+          ).join('');
+        } else {
+          list.innerHTML = '<div class="no-data">No rules yet. Add rules above.</div>';
+        }
+      } catch (e) {
+        document.getElementById('rulesList').innerHTML = '<div class="no-data">Error loading rules</div>';
+      }
+    }
+
+    async function deleteRule(id) {
+      if (!confirm('Delete this rule?')) return;
+      try {
+        const res = await fetch(API_BASE + '/rule/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN },
+          body: JSON.stringify({ id })
+        });
+        const data = await res.json();
+        if (data.error === false) {
+          showToast('Rule deleted', 'success');
+          loadRules();
+        } else {
+          showToast('Failed: ' + (data.message || 'Error'), 'error');
+        }
+      } catch (err) {
+        showToast('Error: ' + err.message, 'error');
+      }
+    }
+
+    document.getElementById('ruleForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const btn = this.querySelector('button[type=submit]');
+      btn.disabled = true; btn.textContent = 'Adding...';
+
+      const body = {
+        instanceKey: KEY,
+        keywords: document.getElementById('ruleKeywords').value,
+        reply: document.getElementById('ruleReply').value,
+      };
+
+      try {
+        const res = await fetch(API_BASE + '/rule/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (data.error === false) {
+          showToast('Rule added!', 'success');
+          document.getElementById('ruleResult').innerHTML = '<span style="color:#25D366">✓ Added</span>';
+          document.getElementById('ruleKeywords').value = '';
+          document.getElementById('ruleReply').value = '';
+          loadRules();
+        } else {
+          showToast('Failed: ' + (data.message || 'Error'), 'error');
+        }
+      } catch (err) {
+        showToast('Error: ' + err.message, 'error');
+      }
+      btn.disabled = false; btn.textContent = 'Add Rule';
+    });
+
+    loadRules();
   </script>
 </body>
 </html>

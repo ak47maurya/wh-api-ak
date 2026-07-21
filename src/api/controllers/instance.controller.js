@@ -15,6 +15,7 @@ exports.init = async (req, res) => {
     let messagesRead = req.body.messagesRead || false;
     let base64 = req.body.base64 || false;
     let incoming = req.body.incoming || false;
+    let chatbot = req.body.chatbot || false;
 
     const key = req.body.key;
     const filePath = path.join('db/sessions.json');
@@ -72,7 +73,7 @@ if (process.env.MAX_INSTANCES) {
         const dataSession = await fs.readFile(filePath, 'utf-8');
         const sessions = JSON.parse(dataSession);
 
-        sessions.push({ key, ignoreGroups, webhook, base64, incoming, webhookUrl, browser, webhookEvents, messagesRead });
+        sessions.push({ key, ignoreGroups, webhook, base64, incoming, chatbot, webhookUrl, browser, webhookEvents, messagesRead });
 
         await fs.writeFile(filePath, JSON.stringify(sessions, null, 2), 'utf-8');
 
@@ -107,6 +108,7 @@ exports.editar = async (req, res) => {
     let messagesRead = req.body.messagesRead || false;
     let base64 = req.body.base64 || false;
     let incoming = req.body.incoming || false;
+    let chatbot = req.body.chatbot || false;
 
     const key = req.body.key;
     const filePath = path.join('db/sessions.json');
@@ -115,7 +117,7 @@ exports.editar = async (req, res) => {
     const index = sessions.findIndex(session => session.key === key);
 
     if (index !== -1) {
-        sessions[index] = { key, ignoreGroups, webhook, base64, incoming, webhookUrl, browser, webhookEvents, messagesRead };
+        sessions[index] = { key, ignoreGroups, webhook, base64, incoming, chatbot, webhookUrl, browser, webhookEvents, messagesRead };
         await fs.writeFile(filePath, JSON.stringify(sessions, null, 2), 'utf-8');
 
         const instance = WhatsAppInstances[key];

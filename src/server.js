@@ -16,12 +16,16 @@ if (!process.env.REDIS_URL) {
 
 const app = require('./config/express')
 const config = require('./config/config')
+const { connectDB } = require('./config/database')
 
 const { Session } = require('./api/class/session')
 
 
 let server
 
+
+;(async () => {
+  await connectDB()
 
 server = app.listen(config.port, async () => {
     logger.info(`Listening on port ${config.port}`)
@@ -34,7 +38,7 @@ server = app.listen(config.port, async () => {
         let restoreSessions = await session.restoreSessions()
         logger.info(`Sessions restored: ${restoreSessions.length}`)
     }
-})
+})()
 
 const exitHandler = () => {
     // close all WhatsApp socket connections gracefully

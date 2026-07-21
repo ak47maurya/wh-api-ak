@@ -69,8 +69,8 @@ exports.dashboard = async (req, res) => {
   }
 
   try {
-    logs = getLogsByInstance(instanceKey, 100)
-    stats = getInstanceStats(instanceKey)
+    logs = await getLogsByInstance(instanceKey, 100)
+    stats = await getInstanceStats(instanceKey)
   } catch (e) {
     // ignore
   }
@@ -122,9 +122,9 @@ exports.dashboard = async (req, res) => {
   })
 }
 
-exports.deleteLog = (req, res) => {
+exports.deleteLog = async (req, res) => {
   const logId = req.body?.logId || req.query?.logId
   if (!logId) return res.status(400).json({ error: true, message: 'logId required' })
-  const ok = deleteLogEntry(logId)
+  const ok = await deleteLogEntry(logId)
   res.json({ error: !ok, message: ok ? 'Deleted' : 'Not found' })
 }

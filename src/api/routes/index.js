@@ -5,6 +5,7 @@ const messageRoutes = require('./message.route');
 const miscRoutes = require('./misc.route');
 const groupRoutes = require('./group.route');
 const dashboardRoutes = require('./dashboard.route');
+const ruleRoutes = require('./rule.route');
 
 router.get('/status', (req, res) => res.send('OK'));
 
@@ -18,5 +19,6 @@ router.use('/instance', instanceRoutes);
 router.use('/message', messageRoutes);
 router.use('/group', groupRoutes);
 router.use('/misc', miscRoutes);
+router.use('/rule', ruleRoutes);
 
 module.exports = router;

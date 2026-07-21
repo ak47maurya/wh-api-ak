@@ -679,6 +679,7 @@ class WhatsAppInstance {
             this.instance.webhook_events = existingSession.webhookEvents
             this.instance.base64 = existingSession.base64
             this.instance.incoming = existingSession.incoming || false
+            this.instance.chatbot = existingSession.chatbot || false
             this.instance.ignoreGroups = ignoreGroup
         } else {
             b = {
@@ -695,6 +696,7 @@ class WhatsAppInstance {
             this.instance.webhook_events = false
             this.instance.base64 = false
             this.instance.incoming = false
+            this.instance.chatbot = false
             this.instance.ignoreGroups = ignoreGroup
         }
 
@@ -955,6 +957,21 @@ class WhatsAppInstance {
                     } catch (_) {}
                 }
 
+                if (this.instance.chatbot === true && msg.key.fromMe !== true) {
+                    try {
+                        const { getReply } = require('../helper/chatbot')
+                        const msgText = msg.message?.conversation || msg.message?.extendedTextMessage?.text || ''
+                        const reply = await getReply(this.key, msgText)
+                        if (reply) {
+                            const jid = msg.key.remoteJid
+                            const isGroup = jid.endsWith('@g.us')
+                            if (!isGroup) {
+                                await this.instance.sock?.sendMessage(jid, { text: reply }, { quoted: msg })
+                            }
+                        }
+                    } catch (_) {}
+                }
+
                 if (this.instance.webhook === true) {
                     try {
                         const webhookData = {
@@ -1199,6 +1216,7 @@ class WhatsAppInstance {
             messagesRead: sessionData.messagesRead,
             ignoreGroups: sessionData.ignoreGroups,
             incoming: sessionData.incoming,
+            chatbot: sessionData.chatbot,
             user: this.instance?.online ? this.instance.sock?.user : {},
         }
     }
