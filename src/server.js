@@ -38,6 +38,7 @@ server = app.listen(config.port, async () => {
         let restoreSessions = await session.restoreSessions()
         logger.info(`Sessions restored: ${restoreSessions.length}`)
     }
+  })
 })()
 
 const exitHandler = () => {
