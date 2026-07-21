@@ -43,7 +43,8 @@ app.use(cookieParser(process.env.COOKIE_SECRET))
 let sessionStore
 if (process.env.REDIS_URL) {
   try {
-    const RedisStore = require('connect-redis').default
+    const connectRedis = require('connect-redis')
+    const RedisStore = connectRedis.RedisStore || connectRedis.default || connectRedis
     const { createClient } = require('redis')
     const redisClient = createClient({ url: process.env.REDIS_URL })
     redisClient.connect().catch(() => {})
