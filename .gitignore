@@ -10,6 +10,8 @@ db/*/
 !db/sessions.json
 logs/
 temp/
+docs/
+WhatsAppAPI.gs
 
 # IDEs
 .vscode/settings.json
