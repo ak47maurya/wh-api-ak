@@ -40,10 +40,22 @@ app.use(express.json({ limit: '50mb' }))
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser(process.env.COOKIE_SECRET))
 
+let sessionStore
+if (process.env.REDIS_URL) {
+  try {
+    const RedisStore = require('connect-redis').default
+    const { createClient } = require('redis')
+    const redisClient = createClient({ url: process.env.REDIS_URL })
+    redisClient.connect().catch(() => {})
+    sessionStore = new RedisStore({ client: redisClient })
+  } catch (_) {}
+}
+
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
+  store: sessionStore,
   cookie: {
     secure: process.env.HTTPS === 'true',
     httpOnly: true,
