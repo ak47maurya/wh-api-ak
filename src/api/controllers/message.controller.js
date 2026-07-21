@@ -12,6 +12,7 @@ function logSend(instanceKey, method, body, result, status, logId) {
         appendLog({
             _logId: logId || genLogId(),
             instanceKey,
+            direction: 'outgoing',
             method,
             to: body?.id || body?.message?.id || 'unknown',
             text: body?.message || body?.text || '[media]',
